@@ -11,6 +11,8 @@ and opens the site when you click the icon.
 - Drag a URL onto the icons: on an icon it replaces that site, beside them it
   adds a new one
 
+![Two favicons in the panel, one per monitored website](screenshots/screenshot_20261005_224154.png)
+
 ## Requirements
 
 | | |
@@ -24,6 +26,13 @@ No Python, no ImageMagick and no Pillow: Qt does the fetching, the decoding and
 the grayscale copy.
 
 ## Build and install
+
+```sh
+./install.sh      # Release, built into ./build-local and installed into ~/.local
+./build.sh        # Debug, built into ./build — build only, no install
+```
+
+Both are thin wrappers around CMake; by hand it is the same few commands:
 
 ```sh
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
@@ -116,12 +125,10 @@ ctest --test-dir build --output-on-failure
 | `plasmoid-configpage` | the settings page, which `plasmawindowed` never loads — a page that fails to load costs the whole dialog and reports nothing |
 | `plasmoid-structure` | that `config.qml` is a `ConfigModel` and every `main.xml` entry has a `cfg_` property on a page |
 
-## Plans
+## Plan
 
-`doc/` holds the plans for the three platforms: `plan-kde-linux.md` (this one,
-with a progress list of what is built), `plan-windows-11.md` and
-`plan-android.md`. Only the KDE plan is implemented; the C++ core is plain Qt, so
-it can back the Windows tray application too.
+`doc/plan-kde-linux.md` is the plan this implementation follows, with a progress
+list of what is built and what is left.
 
 ## Vibecoded
 
