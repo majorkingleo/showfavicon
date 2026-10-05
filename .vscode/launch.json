@@ -1,0 +1,85 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug: showfavicon (fetch one site)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/src/showfavicon",
+            "args": [
+                "${input:url}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty printing for Qt types",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "CMake: build (Debug)"
+        },
+        {
+            "name": "Debug: showfavicon (into a cache directory)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/src/showfavicon",
+            "args": [
+                "${input:url}",
+                "--cache-dir",
+                "${input:cacheDir}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty printing for Qt types",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "CMake: build (Debug)"
+        },
+        {
+            "name": "Debug: tst_faviconresolver",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/tests/tst_faviconresolver",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty printing for Qt types",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "CMake: build (Debug)"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "url",
+            "type": "promptString",
+            "description": "Website whose favicon to fetch",
+            "default": "https://serverhealthcheck.borger.co.at"
+        },
+        {
+            "id": "cacheDir",
+            "type": "promptString",
+            "description": "Directory to cache the favicon in",
+            "default": "/tmp/showfavicon-cache"
+        }
+    ]
+}

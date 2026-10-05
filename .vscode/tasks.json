@@ -1,0 +1,516 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        // ---------------------------------------------------------- configure
+        {
+            "label": "CMake: configure (Debug)",
+            "detail": "Configure the build directory with Ninja and the Debug build type.",
+            "type": "shell",
+            "command": "cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true,
+                "group": "configure"
+            }
+        },
+        {
+            "label": "CMake: configure (pick build type)",
+            "detail": "Configure the build directory with a build type of your choice.",
+            "type": "shell",
+            "command": "cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${input:buildType}",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true,
+                "group": "configure"
+            }
+        },
+        // -------------------------------------------------------------- build
+        {
+            "label": "CMake: build (Debug)",
+            "detail": "Build into ./build. This is the default build task, bound to Ctrl+Shift+B.",
+            "type": "shell",
+            "command": "cmake --build build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "CMake: configure (Debug)",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared",
+                "clear": true,
+                "group": "build"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "CMake: build (verbose)",
+            "detail": "Same build, but every compiler command line is printed.",
+            "type": "shell",
+            "command": "cmake --build build --verbose",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "CMake: configure (Debug)",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true,
+                "group": "build"
+            }
+        },
+        {
+            "label": "CMake: build (Release)",
+            "detail": "Separate build directory so Debug and Release can coexist.",
+            "type": "shell",
+            "command": "cmake -B build-release -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build-release",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared",
+                "clear": true,
+                "group": "build"
+            },
+            "group": "build"
+        },
+        {
+            "label": "CMake: rebuild from scratch",
+            "detail": "Wipes ./build and configures and builds again. Use when CMake cache is stale.",
+            "type": "shell",
+            "command": "rm -rf build && cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug && cmake --build build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true,
+                "group": "build"
+            }
+        },
+        {
+            "label": "CMake: clean",
+            "detail": "Removes build artefacts, keeps the configuration.",
+            "type": "shell",
+            "command": "cmake --build build --target clean",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        // ---------------------------------------------------------------- run
+        {
+            "label": "Run: version",
+            "detail": "Smoke test that the binary exists and links.",
+            "type": "shell",
+            "command": "${workspaceFolder}/build/src/showfavicon --version",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "CMake: build (Debug)",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true,
+                "group": "run"
+            }
+        },
+        {
+            "label": "Run: fetch one site (one JSON line)",
+            "detail": "The contract the plasmoid uses: one URL in, one JSON object on stdout. Pipe it into jq to look at it.",
+            "type": "shell",
+            "command": "${workspaceFolder}/build/src/showfavicon '${input:url}'",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "CMake: build (Debug)",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true,
+                "group": "run"
+            }
+        },
+        {
+            "label": "Run: fetch into a cache directory",
+            "detail": "Writes the colour and the grayscale PNG into the given directory and prints their paths, so both copies can be looked at.",
+            "type": "shell",
+            "command": "mkdir -p '${input:cacheDir}' && ${workspaceFolder}/build/src/showfavicon '${input:url}' --cache-dir '${input:cacheDir}'",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "CMake: build (Debug)",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true,
+                "group": "run"
+            }
+        },
+        {
+            "label": "Run: offline (cached icon stays)",
+            "detail": "Points at a host that does not resolve. ok is false and the cached paths are still reported, which is the state the widget draws grayscale.",
+            "type": "shell",
+            "command": "${workspaceFolder}/build/src/showfavicon '${input:offlineUrl}'",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "CMake: build (Debug)",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true,
+                "group": "run"
+            }
+        },
+        {
+            "label": "Run: fetch and show the cache",
+            "detail": "Fetches one site and then lists the cache directory, so the colour and the grayscale copy can be told apart.",
+            "type": "shell",
+            "command": "${workspaceFolder}/build/src/showfavicon '${input:url}'; ls -l \"${env:HOME}/.local/share/showfavicon\"",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "CMake: build (Debug)",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true,
+                "group": "run"
+            }
+        },
+        // ------------------------------------------------------------ install
+        // Installs into ~/.local, which needs no root and is on PATH already.
+        // A separate build directory is required rather than --prefix on the
+        // existing one: the install rules bake in paths from
+        // CMAKE_INSTALL_FULL_* at configure time, so a prefix override on an
+        // existing build directory places files that point at /usr/local, where
+        // nothing was installed.
+        //
+        // CMAKE_INSTALL_PREFIX is the one setting that must be right at
+        // configure time, so it goes into build-local once. Changing any -D
+        // below later needs the directory removed first, otherwise CMake keeps
+        // the cached value and the new flag is ignored without a word.
+        {
+            "label": "Install: local (build + install to ~/.local)",
+            "detail": "Configures build-local, builds Release and installs into ~/.local: the showfavicon binary, the icon, the LICENSE and the QML plasmoid package. ShowFavicon has no daemon, so there is no systemd unit and no D-Bus service to install. Testing is off here to keep the install quick; use the Debug build for that. Plasma caches loaded widgets, so restart plasmashell or re-add the widget before expecting a change to show up.",
+            "type": "shell",
+            "command": "cmake -B build-local -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=\"$HOME/.local\" -DBUILD_TESTING=OFF && cmake --build build-local && cmake --install build-local",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true,
+                "group": "install"
+            }
+        },
+        {
+            "label": "Install: local (verify)",
+            "detail": "Lists what was installed from the manifest cmake wrote, shows which showfavicon the shell resolves, and prints its version through the installed copy. A stale copy earlier on PATH is the usual reason a change seems to have no effect.",
+            "type": "shell",
+            "command": "test -f build-local/install_manifest.txt && sort -u build-local/install_manifest.txt; echo; echo '=== which showfavicon ==='; which showfavicon; echo; \"${env:HOME}/.local/bin/showfavicon\" --version",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true,
+                "group": "install"
+            }
+        },
+        {
+            "label": "Install: local (uninstall)",
+            "detail": "Removes exactly the files cmake recorded in the manifest, the plasmoid package if it was installed with kpackagetool6, and the leftover Python fetcher from the first draft. Nothing outside ~/.local/bin and ~/.local/share is touched. The favicon cache lives in ~/.local/share/showfavicon, which cmake never installed and this never deletes.",
+            "type": "shell",
+            "command": "kpackagetool6 --type Plasma/Applet --remove com.martin.showfavicon 2>/dev/null; test -f build-local/install_manifest.txt && xargs -r rm -f < build-local/install_manifest.txt && rm -f build-local/install_manifest.txt && rm -f \"${env:HOME}/.local/bin/showfavicon-fetch\" && echo 'ShowFavicon removed from ~/.local' || echo 'build-local/install_manifest.txt is missing, so there is nothing to remove'",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true,
+                "group": "install"
+            }
+        },
+        // -------------------------------------------------------------- plasma
+        // Plasma loads a widget once and keeps the compiled QML in memory, so a
+        // changed main.qml does nothing until the shell reads the package again.
+        // There is no per-applet reload: restarting plasmashell is the supported
+        // way, and on Plasma 6 it is owned by a user unit, which makes this a
+        // one line and a second, with the panels recreated and nothing else
+        // disturbed. The widget keeps its place because the panel layout lives
+        // in plasma-org.kde.plasma.desktop-appletsrc, not in the shell.
+        {
+            "label": "Plasma: reload widget (install + restart plasmashell)",
+            "detail": "Installs the current tree into ~/.local and then restarts the shell, which is what makes the panel read the changed QML. Logging out is not needed and would only do the same thing more slowly. Two states have to be told apart, because the obvious command is a silent no-op in one of them. While plasma-plasmashell.service owns the shell, restarting the unit is the clean way and is used. When it does not own it — the shell was started by kstart, which is where a manual reload leaves it — systemctl --user restart answers success, logs 'Started KDE Plasma Workspace' and leaves the running shell untouched: the process it spawns exits at once because org.kde.plasmashell is already owned, the exit status is 0 so Restart=on-failure never retries, and the unit ends up inactive. Measured on Plasma 6.7.5 Wayland on 2026-09-11, four times in the journal and once by hand. So the unit is used only when it is the owner, and the outcome is checked rather than assumed: the task waits a second, looks for the old PID, and replaces the shell by hand if it is still there. It prints both PIDs, which is the only evidence that anything happened. Quitting first and waiting for the process to disappear is deliberate: kstart into a shell that is still shutting down is the one way this comes back to an empty panel.",
+            "type": "shell",
+            "command": "set before (pgrep -x plasmashell); systemctl --user is-active --quiet plasma-plasmashell.service; and systemctl --user restart plasma-plasmashell.service; and sleep 1; and not contains -- $before (pgrep -x plasmashell); or begin; echo 'plasma-plasmashell.service does not own the shell, replacing plasmashell by hand'; kquitapp6 plasmashell; for i in (seq 40); pgrep -x plasmashell >/dev/null; or break; sleep 0.25; end; kstart plasmashell; end; pgrep -x plasmashell >/dev/null; and echo \"plasmashell $before -> \"(pgrep -x plasmashell); or echo 'WARNING: no plasmashell is running, the panel is gone'",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "Install: local (build + install to ~/.local)",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true,
+                "group": "plasma"
+            }
+        },
+        {
+            "label": "Plasma: try widget in a window",
+            "detail": "Reads the package from disk on every start, so it needs neither an install nor a shell restart. The fastest way to look at a QML change, at the cost of showing the widget in its own window instead of in the panel. Close the window to end the task.",
+            "type": "shell",
+            "command": "plasmawindowed com.martin.showfavicon",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true,
+                "group": "plasma"
+            }
+        },
+        // --------------------------------------------------------------- test
+        {
+            "label": "Test: run (ctest)",
+            "detail": "Runs the QTest binaries registered with CTest.",
+            "type": "shell",
+            "command": "ctest --test-dir build --output-on-failure",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true,
+                "group": "test"
+            },
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Test: build and run",
+            "detail": "Full loop: configure, build, then run the tests.",
+            "type": "shell",
+            "command": "ctest --test-dir build --output-on-failure",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "CMake: build (Debug)",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true,
+                "group": "test"
+            },
+            "group": "test"
+        },
+        {
+            "label": "Test: list",
+            "detail": "Shows which tests CTest discovered.",
+            "type": "shell",
+            "command": "ctest --test-dir build --show-only",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true,
+                "group": "test"
+            }
+        },
+        {
+            "label": "Test: run (verbose)",
+            "detail": "Same run, but the qInfo lines are shown. That is where the per-site timings, the icon URL that was picked and the cache paths appear.",
+            "type": "shell",
+            "command": "ctest --test-dir build -V --output-on-failure",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true,
+                "group": "test"
+            },
+            "group": "test"
+        },
+        {
+            "label": "Test: run one case",
+            "detail": "Runs a single test slot, for example testPicksTheBestIconLink or testFallsBackToFaviconIco.",
+            "type": "shell",
+            "command": "${workspaceFolder}/build/tests/tst_faviconresolver '${input:testCase}'",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "CMake: build (Debug)",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true,
+                "group": "test"
+            },
+            "group": "test"
+        },
+        {
+            "label": "Test: run the CLI contract",
+            "detail": "One JSON line on stdout, and the offline result with the cached paths still reported — the part the plasmoid parses.",
+            "type": "shell",
+            "command": "${workspaceFolder}/build/tests/tst_cli",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "CMake: build (Debug)",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true,
+                "group": "test"
+            },
+            "group": "test"
+        },
+        {
+            "label": "Test: rerun failed",
+            "detail": "Re-runs only the tests that failed in the previous run.",
+            "type": "shell",
+            "command": "ctest --test-dir build --rerun-failed --output-on-failure",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true,
+                "group": "test"
+            },
+            "group": "test"
+        },
+        // ------------------------------------------------------------- checks
+        {
+            "label": "Check: dependencies",
+            "detail": "Prints the Qt versions the build relies on, and the CMake that resolves them.",
+            "type": "shell",
+            "command": "pkg-config --modversion Qt6Core Qt6Network Qt6Gui Qt6Svg Qt6Test; cmake --version | head -n 1",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "Check: clang-format (dry run)",
+            "detail": "Lists files that do not match .clang-format. Needs clang installed.",
+            "type": "shell",
+            "command": "clang-format --dry-run --Werror (find src tests -name '*.cpp' -o -name '*.h')",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        }
+    ],
+    "inputs": [
+        {
+            "id": "url",
+            "type": "promptString",
+            "description": "Website whose favicon to fetch",
+            "default": "https://serverhealthcheck.borger.co.at"
+        },
+        {
+            "id": "offlineUrl",
+            "type": "promptString",
+            "description": "Host that does not resolve, to see the offline result",
+            "default": "https://offline.invalid"
+        },
+        {
+            "id": "cacheDir",
+            "type": "promptString",
+            "description": "Directory to cache the favicon in",
+            "default": "/tmp/showfavicon-cache"
+        },
+        {
+            "id": "buildType",
+            "type": "pickString",
+            "description": "CMake build type",
+            "options": [
+                "Debug",
+                "Release",
+                "RelWithDebInfo",
+                "MinSizeRel"
+            ],
+            "default": "Debug"
+        },
+        {
+            "id": "testCase",
+            "type": "promptString",
+            "description": "Test slot to run (function name, optionally with a data row in single quotes)",
+            "default": "testPicksTheBestIconLink"
+        }
+    ]
+}
