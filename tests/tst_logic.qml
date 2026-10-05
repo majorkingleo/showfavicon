@@ -32,8 +32,8 @@ Item {
         // --- shellQuote / buildCommand ------------------------------------
         checkEqual("shellQuote plain", Logic.shellQuote("https://a.example/x"), "'https://a.example/x'");
         checkEqual("shellQuote apostrophe", Logic.shellQuote("it's"), "'it'\\''s'");
-        checkEqual("buildCommand", Logic.buildCommand("showfavicon-fetch", "https://a.example/x"),
-                   "showfavicon-fetch 'https://a.example/x'");
+        checkEqual("buildCommand", Logic.buildCommand("showfavicon", "https://a.example/x"),
+                   "showfavicon 'https://a.example/x'");
 
         // --- hostOf / normalizeUrl ----------------------------------------
         checkEqual("hostOf strips scheme and port", Logic.hostOf("https://Sub.Example.com:8443/p?q=1"), "sub.example.com");

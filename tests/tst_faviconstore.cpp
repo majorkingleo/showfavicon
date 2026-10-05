@@ -72,9 +72,9 @@ void TestFaviconStore::testKeyIsStable()
     QCOMPARE(cacheKey(first), cacheKey(second));
 }
 
-// Measured with the script that is still in tools/: same host, same digest. The
-// key is what lets the C++ implementation pick up the cache the script left
-// behind instead of starting from an empty directory.
+// Measured against the first, script based implementation: same host, same
+// digest. The key is what let the C++ version pick up the cache that script had
+// left behind instead of starting from an empty directory.
 void TestFaviconStore::testKeyMatchesTheScriptImplementation()
 {
     QCOMPARE(cacheKey("https://serverhealthcheck.borger.co.at"),

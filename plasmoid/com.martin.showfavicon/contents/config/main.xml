@@ -14,7 +14,7 @@
         </entry>
         <entry name="fetcher" type="String">
             <label>Command that downloads a favicon</label>
-            <default>showfavicon-fetch</default>
+            <default>showfavicon</default>
         </entry>
     </group>
 </kcfg>

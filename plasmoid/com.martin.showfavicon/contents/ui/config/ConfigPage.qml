@@ -40,13 +40,13 @@ Kirigami.FormLayout {
     QQC.TextField {
         id: fetcherField
         Kirigami.FormData.label: i18n("Download command:")
-        placeholderText: "showfavicon-fetch"
+        placeholderText: "showfavicon"
     }
 
     QQC.Label {
         wrapMode: Text.Wrap
         opacity: 0.7
         font: Kirigami.Theme.smallFont
-        text: i18n("Must accept \"<command> <url>\" and print one JSON line. Installed by scripts/install.sh into ~/.local/bin, which is on the PATH Plasma sees.")
+        text: i18n("Must accept \"<command> <url>\" and print one JSON line. Placed in ~/.local/bin by the install step, which is on the PATH Plasma sees.")
     }
 }

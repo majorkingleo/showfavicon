@@ -33,8 +33,11 @@ Implementation order, with what is already in the tree.
       the cached files instead. Ran end to end against the example site: the
       relative SVG link was resolved, rasterised at its declared 32 px and written
       as two RGBA PNGs with `ok:true`.
-- [ ] **Step 6 — `tst_cli`**, the QML switched to `showfavicon`, a panel test, and
-      `tools/showfavicon-fetch` deleted.
+- [x] **Step 6 — the QML calls the C++ binary.** The `fetcher` entry defaults to
+      `showfavicon`, `tools/showfavicon-fetch` and `scripts/install.sh` are gone,
+      and the stale copy in `~/.local/bin` was removed.
+- [ ] **Step 7 — `tst_cli`** for the JSON contract, the plasmoid structural check
+      moved into CTest, and a panel test by hand.
 
 ## Goal
 
@@ -208,4 +211,5 @@ same plasmoid, each configured with one site.
 6. `Install: local`, add the widget to the panel, then `Plasma: reload widget`;
    check clicks and drag-and-drop on the panel icon, not only in
    `plasmawindowed`.
-7. Delete `tools/showfavicon-fetch` once the C++ CLI passes the same checks.
+7. `tools/showfavicon-fetch` and `scripts/install.sh` are gone; the widget runs the
+   C++ binary, which `cmake --install` places.
