@@ -24,6 +24,7 @@ private slots:
     void testEntryPaths();
 
     void testWriteIsAtomic();
+    void testWriteCreatesTheDirectory();
     void testWriteReportsFailure();
 
     void testHasFileRejectsEmptyFile();
@@ -131,13 +132,36 @@ void TestFaviconStore::testWriteIsAtomic()
     QCOMPARE(reopened.readAll(), second);
 }
 
+// Creating the directory is the store's job. Leaving it to the caller is what
+// made the first real run report "No such file or directory" after a successful
+// fetch, because --cache-dir had never existed.
+void TestFaviconStore::testWriteCreatesTheDirectory()
+{
+    QTemporaryDir directory;
+    QVERIFY(directory.isValid());
+
+    const QString path = QDir(directory.path()).filePath(QStringLiteral("nested/deeper/icon.png"));
+
+    QString error;
+    QVERIFY(!writeAtomic(path, QByteArrayLiteral("x"), &error).isEmpty());
+    QVERIFY2(error.isEmpty(), qPrintable(error));
+    QVERIFY(hasFile(path));
+}
+
 // The writing half of the promise that a failed run leaves the old icon alone.
 void TestFaviconStore::testWriteReportsFailure()
 {
     QTemporaryDir directory;
     QVERIFY(directory.isValid());
 
-    const QString path = QDir(directory.path()).filePath(QStringLiteral("missing/icon.png"));
+    // A regular file where the directory would have to go: mkpath cannot win
+    // against that, so the write has to say so instead of pretending.
+    const QString blocker = QDir(directory.path()).filePath(QStringLiteral("blocker"));
+    QFile file(blocker);
+    QVERIFY(file.open(QIODevice::WriteOnly));
+    file.close();
+
+    const QString path = QDir(blocker).filePath(QStringLiteral("icon.png"));
 
     QString error;
     const QString hash = writeAtomic(path, QByteArray("x"), &error);

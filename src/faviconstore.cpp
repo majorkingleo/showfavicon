@@ -81,6 +81,17 @@ QString writeAtomic(const QString &path, const QByteArray &bytes, QString *error
     if (error)
         error->clear();
 
+    // The caller names a directory it may not have created yet: `--cache-dir` is
+    // whatever the user typed, and on the very first run the parent is missing.
+    // Leaving that to the caller made the first run report "No such file or
+    // directory" after a successful fetch, which is the least useful moment.
+    const QString parent = QFileInfo(path).absolutePath();
+    if (!parent.isEmpty() && !QDir().mkpath(parent)) {
+        if (error)
+            *error = QStringLiteral("cannot create %1").arg(parent);
+        return QString();
+    }
+
     QSaveFile file(path);
     if (!file.open(QIODevice::WriteOnly)) {
         if (error)

@@ -1,5 +1,8 @@
 #include "cli.h"
 
+#include "faviconfetcher.h"
+#include "faviconimage.h"
+#include "faviconresolver.h"
 #include "faviconstore.h"
 #include "log.h"
 #include "version.h"
@@ -8,6 +11,7 @@
 #include <QJsonObject>
 #include <QJsonValue>
 #include <QTextStream>
+#include <QUrl>
 
 namespace ShowFavicon {
 namespace {
@@ -55,21 +59,112 @@ QString replyJson(const QString &site, bool ok, const QString &colour, const QSt
 /// Fetching arrives with the next step, so for now the reply says what is already
 /// cached and nothing else. The shape is the final one, which is what makes it
 /// worth wiring up before the network is in place.
-int reportCached(const QString &urlText, const QString &cacheDir)
-{
-    const QString normalized = normalizeUrlString(urlText);
-    const CacheEntry entry = entryFor(normalized, cacheDir);
-    const CachedFiles cached = cachedFiles(entry);
+/// The outcome of one refresh attempt.
+struct Refresh {
+    bool ok = false;
+    QString hash;
+    QString error;
+};
 
-    Log::step(QStringLiteral("cache"),
-              QStringLiteral("%1 -> %2").arg(entry.key, entry.colourPath));
-    if (!cached.colour.isEmpty()) {
-        Log::step(QStringLiteral("cache"),
-                  QStringLiteral("keeping the cached icon from the last successful run"));
+/// Fetches the page, picks its icon, decodes it and writes both copies.
+Refresh refreshIcon(const QUrl &site, const CacheEntry &entry)
+{
+    Refresh refresh;
+    Fetcher fetcher;
+
+    // The page is read for the icon it advertises and for nothing else. When it
+    // cannot be fetched the icon is tried anyway: plenty of sites answer 403 for
+    // the page and serve the icon happily.
+    const FetchResult page = fetcher.fetchPage(site);
+
+    QUrl iconUrl = site.resolved(QUrl(QStringLiteral("/favicon.ico")));
+    if (page.ok() && !page.body.isEmpty()) {
+        iconUrl = resolveIconUrl(page.body, page.finalUrl);
+    } else if (!page.ok()) {
+        Log::warn(QStringLiteral("page"), page.error);
     }
 
-    out() << replyJson(normalized, false, cached.colour, cached.gray, cached.hash,
-                       QStringLiteral("not implemented: no fetch yet"))
+    const FetchResult icon = fetcher.fetchIcon(iconUrl);
+    if (!icon.ok()) {
+        refresh.error = icon.error;
+        return refresh;
+    }
+    if (icon.body.isEmpty()) {
+        refresh.error = QStringLiteral("the site served an empty icon");
+        return refresh;
+    }
+
+    const DecodedIcon decoded = decodeIcon(icon.body, icon.contentType);
+    if (!decoded.ok()) {
+        refresh.error = QStringLiteral("cannot decode the icon: %1").arg(decoded.error);
+        return refresh;
+    }
+
+    const QByteArray colour = encodePng(decoded.colour);
+    const QByteArray gray = encodePng(decoded.gray);
+    if (colour.isEmpty() || gray.isEmpty()) {
+        refresh.error = QStringLiteral("cannot encode the icon as PNG");
+        return refresh;
+    }
+
+    // Both files or neither in practice: the colour one commits first, and a
+    // failure on the gray copy leaves the previous pair in place rather than a new
+    // colour next to an old gray.
+    QString writeError;
+    const QString digest = writeAtomic(entry.colourPath, colour, &writeError);
+    if (digest.isEmpty()) {
+        refresh.error = writeError;
+        return refresh;
+    }
+    if (writeAtomic(entry.grayPath, gray, &writeError).isEmpty()) {
+        refresh.error = writeError;
+        return refresh;
+    }
+
+    Log::step(QStringLiteral("write"),
+              QStringLiteral("cached a %1x%2 icon, %3 bytes")
+                  .arg(decoded.colour.width())
+                  .arg(decoded.colour.height())
+                  .arg(colour.size()));
+
+    refresh.ok = true;
+    refresh.hash = digest;
+    return refresh;
+}
+
+/// Answers one URL with exactly one JSON line.
+///
+/// The exit code stays 0 even when the site could not be reached: that is a
+/// successful run of the program that found the site down, and the answer carries
+/// the truth in `ok`. The widget never looks at the code, only at the line.
+int fetchAndReport(const QString &urlText, const QString &cacheDir)
+{
+    const QString normalized = normalizeUrlString(urlText);
+    if (normalized.isEmpty()) {
+        err() << "not a URL: " << urlText << Qt::endl;
+        return 2;
+    }
+
+    const CacheEntry entry = entryFor(normalized, cacheDir);
+    Log::step(QStringLiteral("cache"), QStringLiteral("%1 -> %2").arg(entry.key, entry.colourPath));
+
+    const Refresh refresh = refreshIcon(QUrl(normalized), entry);
+    if (refresh.ok) {
+        out() << replyJson(normalized, true, entry.colourPath, entry.grayPath, refresh.hash,
+                           QString())
+              << Qt::endl;
+        return 0;
+    }
+
+    // Failed. Report what is already cached, so the widget keeps the last icon and
+    // draws it grayscale instead of going blank -- which is the whole point of the
+    // grayscale copy.
+    const CachedFiles cached = cachedFiles(entry);
+    if (!cached.colour.isEmpty())
+        Log::step(QStringLiteral("cache"), QStringLiteral("keeping the icon from the last run"));
+    Log::warn(QStringLiteral("fetch"), refresh.error);
+
+    out() << replyJson(normalized, false, cached.colour, cached.gray, cached.hash, refresh.error)
           << Qt::endl;
     return 0;
 }
@@ -158,7 +253,7 @@ int runCli(const QStringList &arguments)
         return 2;
     }
 
-    return reportCached(urlText, cacheDir);
+    return fetchAndReport(urlText, cacheDir);
 }
 
 } // namespace ShowFavicon

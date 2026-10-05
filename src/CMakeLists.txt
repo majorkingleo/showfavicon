@@ -5,6 +5,7 @@
 
 add_library(showfavicon-core STATIC
     faviconfetcher.cpp
+    faviconimage.cpp
     faviconresolver.cpp
     faviconstore.cpp
     log.cpp

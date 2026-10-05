@@ -43,3 +43,16 @@ target_link_libraries(tst_faviconfetcher
 )
 
 add_test(NAME faviconfetcher COMMAND tst_faviconfetcher)
+
+# Decoding, scaling and the grayscale copy. The grayscale one matters most: it is
+# what the widget shows while a site is unreachable, and an implementation that
+# drops the alpha turns a transparent favicon into a black square.
+qt_add_executable(tst_faviconimage tst_faviconimage.cpp)
+
+target_link_libraries(tst_faviconimage
+    PRIVATE
+        showfavicon-core
+        Qt6::Test
+)
+
+add_test(NAME faviconimage COMMAND tst_faviconimage)

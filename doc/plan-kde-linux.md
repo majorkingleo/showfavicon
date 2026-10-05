@@ -25,8 +25,14 @@ Implementation order, with what is already in the tree.
       stub HTTP server in the test: body and content type, the browser
       User-Agent, a redirect with the final URL reported, 404, a refused
       connection, a timeout, binary bytes and an empty body.
-- [ ] **Step 5 — `faviconimage`** plus `tst_faviconimage`, and the fetch wired
-      end to end.
+- [x] **Step 5 — `faviconimage` and the pipeline.** PNG, JPEG, ICO and SVG
+      decoding, the largest frame of a multi-size ICO, scale-down without
+      enlargement, and the grayscale copy with the alpha channel kept;
+      `tst_faviconimage` (16 cases, including a hand-built ICO). The CLI now
+      fetches, resolves, decodes and writes both PNGs, and a failed run reports
+      the cached files instead. Ran end to end against the example site: the
+      relative SVG link was resolved, rasterised at its declared 32 px and written
+      as two RGBA PNGs with `ok:true`.
 - [ ] **Step 6 — `tst_cli`**, the QML switched to `showfavicon`, a panel test, and
       `tools/showfavicon-fetch` deleted.
 

@@ -44,6 +44,9 @@ CacheEntry entryFor(const QString &urlText, const QString &cacheDir = QString())
 /// Writes `bytes` and returns their full sha1, or an empty string with `error`
 /// set.
 ///
+/// The parent directory is created when it is missing, because the caller's cache
+/// directory is usually whatever the user typed and has never existed before.
+///
 /// QSaveFile, so a failure leaves the previous file untouched: the widget shows
 /// the last icon while a site is unreachable, and half a PNG would replace it
 /// with a broken one.
