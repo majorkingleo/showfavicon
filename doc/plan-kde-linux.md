@@ -18,8 +18,8 @@ Implementation order, with what is already in the tree.
       with `tst_faviconstore`. The key matches the script's, so the cache the
       widget already has stays valid.
 - [x] **Step 3 — `faviconresolver`** plus `tst_faviconresolver` (54 cases): the
-      `rel` and format ranking, relative and absolute hrefs, and the example
-      page's own link. That page declares a *relative* SVG href and answers 404
+      `rel` and format ranking, relative and absolute hrefs, and one shape taken
+      from a real page. That page declares a *relative* SVG href and answers 404
       for `/favicon.ico`, so the resolver is load bearing, not a nicety.
 - [x] **Step 4 — `faviconfetcher`** plus `tst_faviconfetcher` (9 cases) against a
       stub HTTP server in the test: body and content type, the browser
@@ -30,9 +30,9 @@ Implementation order, with what is already in the tree.
       enlargement, and the grayscale copy with the alpha channel kept;
       `tst_faviconimage` (16 cases, including a hand-built ICO). The CLI now
       fetches, resolves, decodes and writes both PNGs, and a failed run reports
-      the cached files instead. Ran end to end against the example site: the
-      relative SVG link was resolved, rasterised at its declared 32 px and written
-      as two RGBA PNGs with `ok:true`.
+      the cached files instead. Ran end to end against a real site: the relative
+      SVG link was resolved, rasterised at its declared 32 px and written as two
+      RGBA PNGs with `ok:true`.
 - [x] **Step 6 — the QML calls the C++ binary.** The `fetcher` entry defaults to
       `showfavicon`, `tools/showfavicon-fetch` and `scripts/install.sh` are gone,
       and the stale copy in `~/.local/bin` was removed.
@@ -195,8 +195,8 @@ per site, each with a single entry in its list.
 
 ## Configuration
 
-- `main.xml`: `sites` (a `StringList`, default the example site) and `fetcher`
-  (the command, default `showfavicon`).
+- `main.xml`: `sites` (a `StringList`, no default — a new widget starts empty and
+  asks to be configured) and `fetcher` (the command, default `showfavicon`).
 - Config page: one row per site with a remove button, an *Add website* button and
   the fetcher command. A list cannot be aliased to one control, so the page owns
   the array in `property var cfg_sites`; a field commits on `editingFinished`,

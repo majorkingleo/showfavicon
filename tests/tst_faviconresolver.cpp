@@ -136,14 +136,14 @@ void TestFaviconResolver::testResolveIconUrl_data()
         << QByteArray("<link rel=\"icon\" href=\"favicon.php?ts=1\">")
         << QStringLiteral("https://a.example") << "https://a.example/favicon.php?ts=1";
 
-    // Measured on the site this was written for: the only icon link is relative,
-    // its type says SVG while the path says nothing, and /favicon.ico answers 404,
-    // so the fallback would not save it.
-    QTest::newRow("the real example page")
+    // A shape taken from a real page: the only icon link is relative, its type
+    // says SVG while the path says nothing about it, and /favicon.ico answers 404
+    // -- so the fallback would not save it.
+    QTest::newRow("a relative SVG link on a path that hides it")
         << QByteArray("<link rel=\"icon\" href=\"favicon.php?ts=1791230991\" "
                       "type=\"image/svg+xml\">")
-        << QStringLiteral("https://serverhealthcheck.borger.co.at")
-        << "https://serverhealthcheck.borger.co.at/favicon.php?ts=1791230991";
+        << QStringLiteral("https://icons.example")
+        << "https://icons.example/favicon.php?ts=1791230991";
 
     // The two orderings that decide what a browser would show.
     QTest::newRow("png beats ico")

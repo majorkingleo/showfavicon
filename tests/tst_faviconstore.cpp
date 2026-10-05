@@ -19,7 +19,7 @@ private slots:
     void testKeyIsStable();
     void testKeyIsStable_data();
 
-    void testKeyMatchesTheScriptImplementation();
+    void testKeyIsPinnedToAnIndependentImplementation();
 
     void testEntryPaths();
 
@@ -72,13 +72,13 @@ void TestFaviconStore::testKeyIsStable()
     QCOMPARE(cacheKey(first), cacheKey(second));
 }
 
-// Measured against the first, script based implementation: same host, same
-// digest. The key is what let the C++ version pick up the cache that script had
-// left behind instead of starting from an empty directory.
-void TestFaviconStore::testKeyMatchesTheScriptImplementation()
+// The digest has to be over the normalised URL text and nothing else -- not over
+// QUrl's own serialisation. Pinned to what an independent implementation (Python's
+// hashlib over the same string) produces, because that agreement is what lets the
+// C++ version pick up a cache an earlier implementation left behind.
+void TestFaviconStore::testKeyIsPinnedToAnIndependentImplementation()
 {
-    QCOMPARE(cacheKey("https://serverhealthcheck.borger.co.at"),
-             QStringLiteral("serverhealthcheck.borger.co.at-b33695b3"));
+    QCOMPARE(cacheKey("https://example.com"), QStringLiteral("example.com-327c3fda"));
 }
 
 // Two URLs on one host must not share a name, and the name has to say which host

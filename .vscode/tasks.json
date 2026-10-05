@@ -480,7 +480,7 @@
             "id": "url",
             "type": "promptString",
             "description": "Website whose favicon to fetch",
-            "default": "https://serverhealthcheck.borger.co.at"
+            "default": "https://example.com"
         },
         {
             "id": "offlineUrl",

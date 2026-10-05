@@ -7,9 +7,8 @@
     <group name="General">
         <entry name="sites" type="StringList">
             <label>Websites</label>
-            <!-- A comma separated list, so only a URL without a comma may stand
-                 as the default here. The widget holds as many as are added. -->
-            <default>https://serverhealthcheck.borger.co.at</default>
+            <!-- No default on purpose: a new widget starts with an empty list and
+                 asks to be configured, rather than fetching a site nobody chose. -->
         </entry>
         <entry name="fetcher" type="String">
             <label>Command that downloads a favicon</label>
