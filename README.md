@@ -121,6 +121,7 @@ ctest --test-dir build --output-on-failure
 | `faviconresolver` | which `<link rel=icon>` wins, relative and absolute hrefs, the `/favicon.ico` fallback |
 | `faviconfetcher` | the HTTP exchange against a stub server in the test: redirects, 404, a refused connection, a timeout, binary bytes |
 | `faviconimage` | decoding, scale-down, the grayscale copy with its alpha channel kept, a hand-built ICO |
+| `cli` | the binary's contract: one JSON line with six keys, the exit codes, and the cached paths surviving a failed fetch |
 | `plasmoid-logic` | the drop decisions in `logic.js`, run headless with `qmlscene6` |
 | `plasmoid-configpage` | the settings page, which `plasmawindowed` never loads — a page that fails to load costs the whole dialog and reports nothing |
 | `plasmoid-structure` | that `config.qml` is a `ConfigModel` and every `main.xml` entry has a `cfg_` property on a page |

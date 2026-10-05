@@ -36,8 +36,12 @@ Implementation order, with what is already in the tree.
 - [x] **Step 6 — the QML calls the C++ binary.** The `fetcher` entry defaults to
       `showfavicon`, `tools/showfavicon-fetch` and `scripts/install.sh` are gone,
       and the stale copy in `~/.local/bin` was removed.
-- [ ] **Step 7 — `tst_cli`** for the JSON contract of the binary, and a panel test
-      by hand (a click opens the browser, a drop adds or replaces a site).
+- [x] **Step 7 — `tst_cli`**, the contract of the binary (9 cases, run against the
+      binary this build produced rather than one from the PATH): one JSON line on
+      stdout with six keys, the exit codes for `--version`, `--help`, no argument,
+      an unknown option, `--cache-dir` without a value and a second URL, that a
+      site that cannot be reached still exits 0, that the cached paths survive a
+      failed fetch, and that `--verbose` keeps the log on stderr.
 - [x] **Step 8 — any number of websites.** `sites` is a `StringList`, edited as a
       list in the settings dialog; `main.qml` renders one icon per entry and
       `planDrop` replaces the icon a drop landed on or appends beside them.
@@ -46,6 +50,9 @@ Implementation order, with what is already in the tree.
       the suite as well: `tst_logic.qml` for the drop decisions,
       `tst_configpage.qml` for the settings page and `plasmoid-structure` for the
       package layout.
+- [ ] **Step 9 — the panel, by hand.** A left-click has to open the browser and a
+      dropped URL has to add or replace a site. Neither can be automated, so it
+      stays a checklist.
 
 ## Goal
 
@@ -235,6 +242,8 @@ per site, each with a single entry in its list.
    a redirect, a 404 that falls back to `/favicon.ico`, and a timeout.
 4. `tst_cli`: exactly one JSON line on stdout, and `ok:false` offline with the
    cached paths still reported.
+
+   *Done.* The one thing left in the whole plan is 6, and only its manual half.
 5. `ctest` covers the QML side too: `plasmoid-logic`, `plasmoid-configpage` and
    `plasmoid-structure`.
 6. `Install: local`, add the widget to the panel, then `Plasma: reload widget`;

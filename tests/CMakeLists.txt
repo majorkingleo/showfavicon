@@ -97,3 +97,20 @@ target_link_libraries(tst_faviconimage
 )
 
 add_test(NAME faviconimage COMMAND tst_faviconimage)
+
+# The binary's side of the contract: the widget parses exactly one JSON line from
+# stdout and reads six keys, so a stray log line breaks it silently.
+qt_add_executable(tst_cli tst_cli.cpp)
+
+target_link_libraries(tst_cli
+    PRIVATE
+        showfavicon-core
+        Qt6::Test
+)
+
+# The path is baked in, so the test runs the binary it was built with rather than
+# one from the PATH -- which is how a stale installed copy hides a change.
+target_compile_definitions(tst_cli PRIVATE
+    "SHOWFAVICON_BINARY=\"$<TARGET_FILE:showfavicon>\"")
+
+add_test(NAME cli COMMAND tst_cli)
