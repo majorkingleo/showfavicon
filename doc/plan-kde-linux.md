@@ -12,14 +12,16 @@ Implementation order, with what is already in the tree.
       `--verbose` / `--debug` / `--no-color`, and `log` / `paths` adapted from
       InvoiceDrop. Configure and build are green and `Run: version` prints
       `ShowFavicon 0.1.0`.
-- [ ] **Step 2 — CLI contract and cache paths.** `showfavicon <url>` answers with
-      one JSON line; `faviconstore` (cache key, atomic write, sha1) and
-      `tests/CMakeLists.txt` so the C++ tests can start.
+- [x] **Step 2 — CLI contract and cache paths.** `showfavicon <url>` answers with
+      one JSON line and reports the cached files of a run that cannot fetch yet;
+      `faviconstore` (cache key, atomic write, sha1) and `tests/CMakeLists.txt`
+      with `tst_faviconstore`. The key matches the script's, so the cache the
+      widget already has stays valid.
 - [ ] **Step 3 — `faviconresolver`** plus `tst_faviconresolver`.
 - [ ] **Step 4 — `faviconfetcher`** plus `tst_faviconfetcher` against a local
       `QTcpServer`.
-- [ ] **Step 5 — `faviconimage`** plus `tst_faviconimage` / `tst_faviconstore`,
-      and the fetch wired end to end.
+- [ ] **Step 5 — `faviconimage`** plus `tst_faviconimage`, and the fetch wired
+      end to end.
 - [ ] **Step 6 — `tst_cli`**, the QML switched to `showfavicon`, a panel test, and
       `tools/showfavicon-fetch` deleted.
 
@@ -128,7 +130,8 @@ InvoiceDrop keeps its `invoicelogic.js`.
 2. The binary does the work and prints exactly one JSON line on stdout:
    `showfavicon <url>` → `{"site":…, "ok":true, "file":…, "grayFile":…, "hash":…, "error":""}`.
    The contract is unchanged from today's script, so `logic.js` and `main.qml`
-   keep working as they are.
+   keep working as they are. `QJsonObject` writes its keys alphabetically, so the
+   line starts with `error`; the widget reads by key, not by position.
    - `faviconfetcher` GETs the page (15 s timeout, browser User-Agent, redirects
      followed); `faviconresolver` picks the best `<link rel="icon">` and falls
      back to `/favicon.ico`.

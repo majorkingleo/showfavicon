@@ -4,6 +4,7 @@
 # ---------------------------------------------------------------------------
 
 add_library(showfavicon-core STATIC
+    faviconstore.cpp
     log.cpp
     paths.cpp
 )
