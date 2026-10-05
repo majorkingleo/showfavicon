@@ -7,8 +7,8 @@
             }
         ],
         "Category": "Utilities",
-        "Description": "Shows the favicon of one or two websites in the panel and opens them on click.",
-        "Description[de]": "Zeigt das Favicon von ein oder zwei Webseiten in der Leiste und öffnet sie beim Anklicken.",
+        "Description": "Shows the favicon of each monitored website in the panel and opens it on click.",
+        "Description[de]": "Zeigt das Favicon jeder überwachten Webseite in der Leiste und öffnet sie beim Anklicken.",
         "Icon": "internet-web-browser",
         "Id": "com.martin.showfavicon",
         "License": "MIT",

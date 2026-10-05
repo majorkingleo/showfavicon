@@ -65,14 +65,13 @@ function parseReply(stdout) {
     return null;
 }
 
-// Decide what a drop means. `sites` is the visible list of {url} objects,
-// `targetIndex` the icon the drop landed on, `freeSlot` the first unused
-// configuration slot (0 or 1) or -1 when both are taken.
+// Decide what a drop means. `sites` is the visible list of {url} objects and
+// `targetIndex` the icon the drop landed on, or -1 when it landed beside them.
 //
 //   same host already monitored -> refresh that site
-//   free slot available         -> add the site to that slot
-//   both slots taken            -> replace the icon the drop landed on
-function planDrop(sites, droppedUrl, targetIndex, freeSlot) {
+//   dropped on an icon          -> replace that icon
+//   dropped beside the icons    -> append
+function planDrop(sites, droppedUrl, targetIndex) {
     var url = normalizeUrl(droppedUrl);
     if (url.length === 0) return null;
     var host = hostOf(url);
@@ -81,7 +80,7 @@ function planDrop(sites, droppedUrl, targetIndex, freeSlot) {
         if (host.length > 0 && hostOf(list[i].url) === host)
             return { action: "refresh", index: i, url: url };
     }
-    if (freeSlot >= 0) return { action: "add", slot: freeSlot, url: url };
-    var index = (targetIndex >= 0 && targetIndex < list.length) ? targetIndex : list.length - 1;
-    return { action: "replace", index: index, url: url };
+    if (targetIndex >= 0 && targetIndex < list.length)
+        return { action: "replace", index: targetIndex, url: url };
+    return { action: "append", url: url };
 }

@@ -63,21 +63,24 @@ Item {
         var one = [{ url: "https://a.example" }];
         var two = [{ url: "https://a.example" }, { url: "https://b.example" }];
 
-        var same = Logic.planDrop(one, "https://a.example/other", 0, 1);
+        var same = Logic.planDrop(one, "https://a.example/other", 0);
         check("planDrop same host refreshes", same !== null && same.action === "refresh" && same.index === 0);
 
-        var add = Logic.planDrop(one, "https://b.example", 0, 1);
-        check("planDrop new host with free slot adds", add !== null && add.action === "add" && add.slot === 1);
+        var replace = Logic.planDrop(two, "https://c.example", 1);
+        check("planDrop on an icon replaces it", replace !== null && replace.action === "replace" && replace.index === 1);
 
-        var replace = Logic.planDrop(two, "https://c.example", 1, -1);
-        check("planDrop full replaces target", replace !== null && replace.action === "replace" && replace.index === 1);
+        var append = Logic.planDrop(two, "https://c.example", -1);
+        check("planDrop beside the icons appends", append !== null && append.action === "append");
 
-        var fallback = Logic.planDrop(two, "https://c.example", 9, -1);
-        check("planDrop out of range falls back to last", fallback !== null && fallback.index === 1);
+        var beyond = Logic.planDrop(two, "https://c.example", 9);
+        check("planDrop past the end appends", beyond !== null && beyond.action === "append");
 
-        checkEqual("planDrop empty url", Logic.planDrop(one, "", 0, 0), null);
+        var first = Logic.planDrop([], "https://a.example", -1);
+        check("planDrop into an empty widget appends", first !== null && first.action === "append");
 
-        console.log(harness.failures === 0 ? "ALL PASS" : (harness.failures + " FAILURES"));
+        checkEqual("planDrop empty url", Logic.planDrop(one, "", 0), null);
+
+        console.log(harness.failures === 0 ? "ALL PASSED" : (harness.failures + " CHECK(S) FAILED"));
         Qt.callLater(Qt.quit);
     }
 }

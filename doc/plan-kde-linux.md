@@ -36,16 +36,24 @@ Implementation order, with what is already in the tree.
 - [x] **Step 6 — the QML calls the C++ binary.** The `fetcher` entry defaults to
       `showfavicon`, `tools/showfavicon-fetch` and `scripts/install.sh` are gone,
       and the stale copy in `~/.local/bin` was removed.
-- [ ] **Step 7 — `tst_cli`** for the JSON contract, the plasmoid structural check
-      moved into CTest, and a panel test by hand.
+- [ ] **Step 7 — `tst_cli`** for the JSON contract of the binary, and a panel test
+      by hand (a click opens the browser, a drop adds or replaces a site).
+- [x] **Step 8 — any number of websites.** `sites` is a `StringList`, edited as a
+      list in the settings dialog; `main.qml` renders one icon per entry and
+      `planDrop` replaces the icon a drop landed on or appends beside them.
+      `check-package.cmake` learned about `property var cfg_…`, which a list page
+      needs because a list cannot be aliased to one control. The QML side joined
+      the suite as well: `tst_logic.qml` for the drop decisions,
+      `tst_configpage.qml` for the settings page and `plasmoid-structure` for the
+      package layout.
 
 ## Goal
 
 Show one favicon per monitored website directly in the panel (system tray).
 Left-click an icon opens the site in the default browser. The favicon is
 re-fetched hourly; if offline, the last good favicon stays but is shown grayed
-out. 1–2 websites are supported; URLs are configurable and settable by
-drag-and-drop.
+out. Any number of websites is supported: the list is edited in the settings
+dialog, and a drop onto the panel icons adds or replaces one.
 
 ## Why a Plasmoid (not a system-tray icon)
 
@@ -55,7 +63,7 @@ two requirements can only be met by a Plasmoid directly:
 
 | Requirement | Plasmoid | System-tray icon (SNI) |
 |---|---|---|
-| 2 icons side by side in the panel | ✅ a `Row` of icons rendered directly in the panel | ❌ folded into the tray overflow, hidden by default |
+| Many icons side by side in the panel | ✅ a `Row` of icons rendered directly in the panel | ❌ folded into the tray overflow, hidden by default |
 | Drag-and-drop onto the icon | ✅ `DropArea` directly on the icon | ❌ SNI does not support drag-and-drop |
 | Click → open browser | ✅ `Qt.openUrlExternally` | ✅ menu/click action |
 | Configuration | ✅ built-in dialog (KConfigXT) | ⚠️ needs a separate settings window |
@@ -66,9 +74,9 @@ Deciding factors:
 
 1. **Drag-and-drop** — a Plasmoid can accept a URL with a `DropArea` directly on
    the panel icon. A tray icon cannot.
-2. **Two icons in the panel** — the Plasmoid draws the icons itself as a `Row`.
-   SNI icons are collapsed into the system-tray overflow and are not visible side
-   by side by default.
+2. **Several icons in the panel** — the Plasmoid draws the icons itself as a
+   `Row`. SNI icons are collapsed into the system-tray overflow and are not
+   visible side by side by default.
 
 SNI would only be preferable for a cross-desktop solution (GNOME, XFCE, …) or a
 classic daemon in the tray overflow — neither is required here. The existing
@@ -126,7 +134,10 @@ showfavicon/
     CMakeLists.txt
     tst_faviconresolver.cpp  tst_faviconimage.cpp  tst_faviconstore.cpp
     tst_faviconfetcher.cpp   tst_cli.cpp
-    tst_plasmoid.qml         check_plasmoid_config.cmake
+    tst_logic.qml            tst_configpage.qml
+  scripts/
+    check-package.{sh,cmake}         the package's structure, also a CTest test
+    reload-plasmoid.sh               install, then restart the shell
   plasmoid/com.martin.showfavicon/   thin QML: panel icons, clicks, drops, settings
   .vscode/tasks.json                 configure / build / run / install / plasma / test
 ```
@@ -162,32 +173,50 @@ InvoiceDrop keeps its `invoicelogic.js`.
    not, the placeholder SVG when nothing is cached. `rev` in the image URL forces
    a reload when `hash` changes, because the file is overwritten in place.
 
-## Multi-site (2 icons)
+## Multi-site (any number of icons)
 
-Primary approach: **one plasmoid renders a `Row` of N icons** (N = configured
-sites, 1–2). The compact representation is a custom `Row` of icon slots; each
-slot is its own `MouseArea` + `DropArea`. Left-click → `Qt.openUrlExternally(url)`.
-Settings via right-click → Plasma context menu → *Configure*. The
-`fullRepresentation` is minimal (status list + "right-click → Configure" hint).
+One plasmoid renders a `Row` with one icon per configured site. Each slot is its
+own `MouseArea` plus a `DropArea`. Left-click → `Qt.openUrlExternally(url)`;
+middle-click opens the popup, which lists every site with its status; right-click
+→ *Configure*.
 
-Fallback if the panel clips a wide compact representation: two instances of the
-same plasmoid, each configured with one site.
+A drop is one of three things, decided in `logic.js`:
+
+- the host is already monitored → that site is refreshed
+- dropped on an icon → that site is replaced
+- dropped beside the icons, or anywhere in the popup → the site is appended
+
+Practical limits: the icons grow with the list and share the panel width, and the
+hourly run starts one fetch per site at once. Both are fine for a handful; beyond
+that the popup is the better place to look than the panel.
+
+Fallback if the panel clips a wide compact representation: one widget instance
+per site, each with a single entry in its list.
 
 ## Configuration
 
-- `main.xml`: `site1`, `site2` (empty = not shown) and `fetcher` (the command,
-  default `showfavicon`). Site 1 defaults to
-  `https://serverhealthcheck.borger.co.at`.
-- Config page: two URL fields plus the fetcher command.
-- Drag-and-drop: each panel icon is a `DropArea`; `logic.js` decides whether the
-  drop refreshes the same host, fills the free slot, or replaces the icon it
-  landed on, and the result is written back through `Plasmoid.configuration`.
+- `main.xml`: `sites` (a `StringList`, default the example site) and `fetcher`
+  (the command, default `showfavicon`).
+- Config page: one row per site with a remove button, an *Add website* button and
+  the fetcher command. A list cannot be aliased to one control, so the page owns
+  the array in `property var cfg_sites`; a field commits on `editingFinished`,
+  because replacing the array mid-typing would take the focus with it.
+- Drag-and-drop writes the same array back through
+  `Plasmoid.configuration.sites`, rebuilding it from the visible list — so blank
+  and duplicate entries disappear the first time a drop changes anything.
+- No migration from the first version's `site1`/`site2`: those keys stay in the
+  config file unused and the URLs have to be entered once.
 
 ## Key risks to verify
 
-- `cfg_` aliases must match the `main.xml` entries exactly; `config.qml` must be a
-  `ConfigModel`; `ConfigCategory.source` resolves against `contents/ui/`.
-  `./scripts/check-package.sh` checks all three.
+- `cfg_` properties must match the `main.xml` entries exactly; `config.qml` must
+  be a `ConfigModel`; `ConfigCategory.source` resolves against `contents/ui/`.
+  `./scripts/check-package.sh` checks all three, and knows about `property var
+  cfg_…` for the list page.
+- `property var cfg_sites` is the one part of the settings dialog that cannot be
+  checked outside Plasma: the page's own list handling is covered by
+  `tst_configpage.qml`, but that Plasma hands a `StringList` to a `var` property
+  and takes it back has to be confirmed once by hand.
 - Programmatic config writes must actually persist (KConfigSkeleton) — accept a
   drop, then reopen the widget and the settings dialog.
 - ICO and SVG both need a Qt plugin, and both are present here (`libqico`,
@@ -206,8 +235,8 @@ same plasmoid, each configured with one site.
    a redirect, a 404 that falls back to `/favicon.ico`, and a timeout.
 4. `tst_cli`: exactly one JSON line on stdout, and `ok:false` offline with the
    cached paths still reported.
-5. `./scripts/check-package.sh` and the `qmlscene6` harness (`tst_plasmoid.qml`)
-   for the QML side.
+5. `ctest` covers the QML side too: `plasmoid-logic`, `plasmoid-configpage` and
+   `plasmoid-structure`.
 6. `Install: local`, add the widget to the panel, then `Plasma: reload widget`;
    check clicks and drag-and-drop on the panel icon, not only in
    `plasmawindowed`.

@@ -1,5 +1,46 @@
-# The suite grows with the core. Qt6 Test is optional so a machine without it can
-# still build the program.
+# ---------------------------------------------------------------- the QML side
+#
+# The two things `plasmawindowed` cannot cover: a settings page that fails to load
+# takes the whole dialog down without a word, and the drop decisions live in a
+# JavaScript module that needs no shell at all. Neither needs Qt6::Test, so this
+# section comes before the check that guards the C++ suite.
+
+find_program(QMLSCENE6_EXECUTABLE NAMES qmlscene6)
+
+if(QMLSCENE6_EXECUTABLE)
+    # Both harnesses end themselves with Qt.callLater(Qt.quit), because qmlscene6
+    # ignores Qt.exit() -- and both report the verdict on stdout, because a QML
+    # error does not fail the process on its own.
+    add_test(NAME plasmoid-logic
+             COMMAND ${QMLSCENE6_EXECUTABLE} -platform offscreen
+                     ${CMAKE_CURRENT_SOURCE_DIR}/tst_logic.qml)
+    set_tests_properties(plasmoid-logic PROPERTIES
+        PASS_REGULAR_EXPRESSION "ALL PASSED"
+        FAIL_REGULAR_EXPRESSION "CHECK\\(S\\) FAILED"
+        TIMEOUT 120)
+
+    add_test(NAME plasmoid-configpage
+             COMMAND ${QMLSCENE6_EXECUTABLE} -platform offscreen
+                     ${CMAKE_CURRENT_SOURCE_DIR}/tst_configpage.qml)
+    set_tests_properties(plasmoid-configpage PROPERTIES
+        PASS_REGULAR_EXPRESSION "ALL PASSED"
+        FAIL_REGULAR_EXPRESSION "CHECK\\(S\\) FAILED"
+        TIMEOUT 120)
+else()
+    message(STATUS "qmlscene6 not found, skipping the QML checks")
+endif()
+
+# The package's structure, which Plasma never complains about: a config.qml that
+# is not a ConfigModel costs the entire settings dialog, and a cfg_ property that
+# matches no entry in main.xml is a control that saves nothing.
+add_test(NAME plasmoid-structure
+         COMMAND ${CMAKE_COMMAND}
+                 -DPACKAGE_DIR=${CMAKE_SOURCE_DIR}/plasmoid/com.martin.showfavicon
+                 -P ${CMAKE_SOURCE_DIR}/scripts/check-package.cmake)
+
+# -------------------------------------------------------------- the C++ core
+
+# Qt6 Test is optional so a machine without it can still build the program.
 find_package(Qt6 6.5 QUIET COMPONENTS Test)
 
 if(NOT Qt6Test_FOUND)

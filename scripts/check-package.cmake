@@ -6,9 +6,9 @@ cmake_minimum_required(VERSION 3.20)
 # A `contents/config/config.qml` that is a plain page instead of a ConfigModel
 # loads without a single warning, and the settings dialog then has no page of its
 # own: the user sees the keyboard shortcuts and the About tab and nothing else,
-# with no error anywhere. A `cfg_` alias that does not match an entry name in
+# with no error anywhere. A `cfg_` property that does not match an entry name in
 # `main.xml` is the same kind of silence from the other end -- the dialog opens, a
-# control sits there, and the value is never written. An entry with no alias is
+# control sits there, and the value is never written. An entry with no property is
 # the third direction: a setting that cannot be reached.
 #
 # None of them shows up in a build, a lint or a log, so they are checked here.
@@ -79,7 +79,10 @@ set(aliases "")
 foreach(page_file IN LISTS pages)
     file(READ "${page_file}" page)
 
-    string(REGEX MATCHALL "property[ \t]+alias[ \t]+cfg_[A-Za-z0-9_]+" declarations "${page}")
+    # Any declared property counts, not only `property alias`: a list cannot be
+    # aliased to one control's text, so its page declares `property var
+    # cfg_<entry>` and fills the rows itself.
+    string(REGEX MATCHALL "property[ \t]+[A-Za-z][A-Za-z0-9_.]*[ \t]+cfg_[A-Za-z0-9_]+" declarations "${page}")
 
     foreach(declaration IN LISTS declarations)
         string(REGEX REPLACE ".*cfg_" "" name "${declaration}")
@@ -106,14 +109,14 @@ endif()
 foreach(name IN LISTS names)
     if(NOT name IN_LIST aliases)
         message(FATAL_ERROR
-            "main.xml declares ${name}, and no page has a `property alias cfg_${name}`")
+            "main.xml declares ${name}, and no page has a `property cfg_${name}`")
     endif()
 endforeach()
 
 foreach(name IN LISTS aliases)
     if(NOT name IN_LIST names)
         message(FATAL_ERROR
-            "a page has `property alias cfg_${name}`, and main.xml has no entry ${name}")
+            "a page has `property cfg_${name}`, and main.xml has no entry ${name}")
     endif()
 endforeach()
 
@@ -122,4 +125,4 @@ list(LENGTH pages page_count)
 
 message(STATUS
     "config.qml is a ConfigModel: ${page_count} page(s), ${entry_count} config "
-    "entr(ies), every one of them wired to a cfg_ alias")
+    "entr(ies), every one of them wired to a cfg_ property")

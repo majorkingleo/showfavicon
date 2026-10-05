@@ -14,25 +14,21 @@ import "logic.js" as Logic
 PlasmoidItem {
     id: root
 
-    // Two configuration slots are supported; an empty one is simply not shown.
     readonly property int refreshIntervalMs: 60 * 60 * 1000
     readonly property string placeholderIcon: Qt.resolvedUrl("../icons/placeholder.svg")
 
-    // The configured URLs, in order, with empty slots dropped.
+    // The configured URLs in order: blank entries skipped, duplicates dropped.
+    // Reading through this instead of the raw array means the config tidies itself
+    // up the first time a drop writes to it.
     readonly property var siteUrls: {
         var list = [];
-        var first = Logic.normalizeUrl(Plasmoid.configuration.site1);
-        var second = Logic.normalizeUrl(Plasmoid.configuration.site2);
-        if (first.length > 0) list.push(first);
-        if (second.length > 0) list.push(second);
+        var configured = Plasmoid.configuration.sites || [];
+        for (var i = 0; i < configured.length; i++) {
+            var url = Logic.normalizeUrl(configured[i]);
+            if (url.length > 0 && list.indexOf(url) < 0)
+                list.push(url);
+        }
         return list;
-    }
-
-    // Index of the first unused configuration slot, or -1 when both are taken.
-    readonly property int freeSlot: {
-        if (String(Plasmoid.configuration.site1).trim() === "") return 0;
-        if (String(Plasmoid.configuration.site2).trim() === "") return 1;
-        return -1;
     }
 
     // Roles of sitesModel. Kept as a list so updateRow() can refuse unknown keys.
@@ -179,31 +175,37 @@ PlasmoidItem {
     }
 
     function handleDrop(targetIndex, drop) {
-        var plan = Logic.planDrop(sitesArray(), Logic.urlFromDrop(drop), targetIndex, freeSlot);
+        var plan = Logic.planDrop(sitesArray(), Logic.urlFromDrop(drop), targetIndex);
         if (plan === null)
             return;
         if (plan.action === "refresh")
             refreshSite(plan.index);
-        else if (plan.action === "add")
-            setSlot(plan.slot, plan.url);
+        else if (plan.action === "append")
+            appendSite(plan.url);
         else if (plan.action === "replace")
-            setSlot(slotOfSite(plan.index), plan.url);
+            replaceSite(plan.index, plan.url);
     }
 
-    // Map an index in the visible list back to a configuration slot.
-    function slotOfSite(siteIndex) {
-        var row = sitesModel.get(siteIndex);
-        var url = row ? row.url : "";
-        if (Logic.normalizeUrl(Plasmoid.configuration.site1) === url)
-            return 0;
-        return 1;
+    // Both writers rebuild the whole array from the visible list, so blank and
+    // duplicated entries disappear the first time a drop changes anything.
+    function appendSite(url) {
+        var sites = siteUrls.slice();
+        sites.push(url);
+        storeSites(sites);
     }
 
-    function setSlot(slot, url) {
-        if (slot === 0)
-            Plasmoid.configuration.site1 = url;
-        else
-            Plasmoid.configuration.site2 = url;
+    function replaceSite(siteIndex, url) {
+        var sites = siteUrls.slice();
+        if (siteIndex < 0 || siteIndex >= sites.length) {
+            appendSite(url);
+            return;
+        }
+        sites[siteIndex] = url;
+        storeSites(sites);
+    }
+
+    function storeSites(sites) {
+        Plasmoid.configuration.sites = sites;
         persistConfiguration();
     }
 
@@ -219,17 +221,20 @@ PlasmoidItem {
         }
     }
 
-    // Which icon a drop landed on, from its x position inside the widget.
+    // Which icon a drop landed on, from its x position inside the widget, or -1
+    // when it landed beside them -- which is what appends a site.
     function dropTargetIndex(x) {
         if (sitesModel.count === 0)
             return -1;
+
         var slotWidth = Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.smallSpacing;
         var local = x - iconRow.x;
         if (local < 0)
             return 0;
+
         var index = Math.floor(local / slotWidth);
         if (index >= sitesModel.count)
-            return sitesModel.count - 1;
+            return -1;
         return index;
     }
 

@@ -5,7 +5,7 @@
 # Usage: check-package.sh PLASMOID_DIR
 #
 # Checks what Plasma reports silently: that config.qml is a ConfigModel, that
-# every page it names exists, and that the main.xml entries and the cfg_ aliases
+# every page it names exists, and that the main.xml entries and the cfg_ properties
 # on the pages match in both directions.
 
 set -eu
