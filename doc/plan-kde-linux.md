@@ -4,6 +4,25 @@ A C++ / Qt 6 program that fetches and caches website favicons, plus a thin QML
 plasmoid that shows them in the panel. Built with CMake like InvoiceDrop and
 installed per user with `cmake --install` and `kpackagetool6`.
 
+## Progress
+
+Implementation order, with what is already in the tree.
+
+- [x] **Step 1 — build skeleton.** CMake project, `showfavicon --version`,
+      `--verbose` / `--debug` / `--no-color`, and `log` / `paths` adapted from
+      InvoiceDrop. Configure and build are green and `Run: version` prints
+      `ShowFavicon 0.1.0`.
+- [ ] **Step 2 — CLI contract and cache paths.** `showfavicon <url>` answers with
+      one JSON line; `faviconstore` (cache key, atomic write, sha1) and
+      `tests/CMakeLists.txt` so the C++ tests can start.
+- [ ] **Step 3 — `faviconresolver`** plus `tst_faviconresolver`.
+- [ ] **Step 4 — `faviconfetcher`** plus `tst_faviconfetcher` against a local
+      `QTcpServer`.
+- [ ] **Step 5 — `faviconimage`** plus `tst_faviconimage` / `tst_faviconstore`,
+      and the fetch wired end to end.
+- [ ] **Step 6 — `tst_cli`**, the QML switched to `showfavicon`, a panel test, and
+      `tools/showfavicon-fetch` deleted.
+
 ## Goal
 
 Show one favicon per monitored website directly in the panel (system tray).
@@ -63,9 +82,9 @@ JPEG and ICO through `QImageReader`, SVG through `Qt6::Svg` / `QSvgRenderer`, an
 | File | Use here |
 | --- | --- |
 | `CMakeLists.txt`, `src/CMakeLists.txt` | the project, target and install layout |
-| `src/log.{h,cpp}` | stderr diagnostics that never touch stdout's JSON line |
-| `src/paths.{h,cpp}` | the XDG data directory for the cache |
-| `src/json.{h,cpp}` | the one-line JSON reply |
+| `src/log.{h,cpp}` | stderr diagnostics that never touch stdout's JSON line — copied, the model/note parts dropped |
+| `src/paths.{h,cpp}` | `dataDir()` and `resolvePath()` — the invoice-specific accessors are gone |
+| `src/json.{h,cpp}` | *pattern only*: it is bill-specific and depends on the analysis types, so the reply is built with `QJsonObject` / `QJsonDocument` directly |
 | `src/version.h.in` | `showfavicon --version` |
 | `tests/CMakeLists.txt` | QTest registration plus the `qmlscene6` and `plasmoid-config` tests |
 | `.clang-format`, `.gitignore`, `.vscode/*` | house style and the build tasks |

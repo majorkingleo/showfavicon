@@ -1,0 +1,4 @@
+#pragma once
+
+#define SHOWFAVICON_VERSION "@PROJECT_VERSION@"
+#define SHOWFAVICON_NAME "@PROJECT_NAME@"
