@@ -17,7 +17,10 @@ Implementation order, with what is already in the tree.
       `faviconstore` (cache key, atomic write, sha1) and `tests/CMakeLists.txt`
       with `tst_faviconstore`. The key matches the script's, so the cache the
       widget already has stays valid.
-- [ ] **Step 3 — `faviconresolver`** plus `tst_faviconresolver`.
+- [x] **Step 3 — `faviconresolver`** plus `tst_faviconresolver` (54 cases): the
+      `rel` and format ranking, relative and absolute hrefs, and the example
+      page's own link. That page declares a *relative* SVG href and answers 404
+      for `/favicon.ico`, so the resolver is load bearing, not a nicety.
 - [ ] **Step 4 — `faviconfetcher`** plus `tst_faviconfetcher` against a local
       `QTcpServer`.
 - [ ] **Step 5 — `faviconimage`** plus `tst_faviconimage`, and the fetch wired

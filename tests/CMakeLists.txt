@@ -18,3 +18,15 @@ target_link_libraries(tst_faviconstore
 )
 
 add_test(NAME faviconstore COMMAND tst_faviconstore)
+
+# Which icon a page advertises. Pure text in, URL out, so the whole ordering can
+# be checked without a network.
+qt_add_executable(tst_faviconresolver tst_faviconresolver.cpp)
+
+target_link_libraries(tst_faviconresolver
+    PRIVATE
+        showfavicon-core
+        Qt6::Test
+)
+
+add_test(NAME faviconresolver COMMAND tst_faviconresolver)
