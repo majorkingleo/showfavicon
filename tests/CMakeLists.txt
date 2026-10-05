@@ -30,3 +30,16 @@ target_link_libraries(tst_faviconresolver
 )
 
 add_test(NAME faviconresolver COMMAND tst_faviconresolver)
+
+# The HTTP exchange, against a stub server in the test rather than the network:
+# redirects, a 404, a refused connection and a hang are all states the widget
+# reacts to differently.
+qt_add_executable(tst_faviconfetcher tst_faviconfetcher.cpp)
+
+target_link_libraries(tst_faviconfetcher
+    PRIVATE
+        showfavicon-core
+        Qt6::Test
+)
+
+add_test(NAME faviconfetcher COMMAND tst_faviconfetcher)

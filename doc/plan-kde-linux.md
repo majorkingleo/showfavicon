@@ -21,8 +21,10 @@ Implementation order, with what is already in the tree.
       `rel` and format ranking, relative and absolute hrefs, and the example
       page's own link. That page declares a *relative* SVG href and answers 404
       for `/favicon.ico`, so the resolver is load bearing, not a nicety.
-- [ ] **Step 4 — `faviconfetcher`** plus `tst_faviconfetcher` against a local
-      `QTcpServer`.
+- [x] **Step 4 — `faviconfetcher`** plus `tst_faviconfetcher` (9 cases) against a
+      stub HTTP server in the test: body and content type, the browser
+      User-Agent, a redirect with the final URL reported, 404, a refused
+      connection, a timeout, binary bytes and an empty body.
 - [ ] **Step 5 — `faviconimage`** plus `tst_faviconimage`, and the fetch wired
       end to end.
 - [ ] **Step 6 — `tst_cli`**, the QML switched to `showfavicon`, a panel test, and
