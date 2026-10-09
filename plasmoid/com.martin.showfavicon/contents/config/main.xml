@@ -12,7 +12,7 @@
         </entry>
         <entry name="fetcher" type="String">
             <label>Command that downloads a favicon</label>
-            <default>showfavicon</default>
+            <default>"$HOME/.local/bin/showfavicon"</default>
         </entry>
     </group>
 </kcfg>
